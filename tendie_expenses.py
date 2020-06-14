@@ -1,6 +1,9 @@
 import os
 import calendar
 
+import pandas as pd 
+
+
 from flask import request, session
 from flask_session import Session
 from sqlalchemy import create_engine
@@ -15,13 +18,25 @@ db = scoped_session(sessionmaker(bind=engine))
 
 # Add expense(s) to the users expense records
 # There are two entry points for this: 1) 'addexpenses' route and 2) 'index' route. #1 allows many expenses whereas #2 only allows 1 expense per POST.
+# Third option - add through csv containing statement
 def addExpenses(formData, userID):
     expenses = []
     expense = {"description": None, "category": None,
                "date": None, "amount": None, "payer": None}
 
+    #the statement upload
+    if isinstance(formData, pd.DataFrame):
+        for l in range(len(formData)):
+            expense["description"] = formData.loc[l]["Description"].split(" ")[0] 
+            expense["category"] = formData.loc[l]["Category"]
+            expense["date"] = formData.loc[l]["Date"]
+            expense["amount"] = float(formData.loc[l]["Amount"])
+            expense["payer"] = "Self"
+
+            expenses.append(expense.copy())
+
     # Check if the user is submitting via 'addexpenses' or 'index' route - this determines if a user is adding 1 or potentially many expenses in a single POST
-    if "." not in formData[0][0]:
+    elif "." not in formData[0][0]:
         for key, value in formData:
             # Add to dictionary
             expense[key] = value.strip()

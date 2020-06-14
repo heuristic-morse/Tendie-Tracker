@@ -21,14 +21,19 @@ from datetime import datetime
 
 from helpers import apology, login_required, usd
 
+import pandas as pd
+
 # Configure application
 app = Flask(__name__)
 
 # Set app key
-app.secret_key = os.getenv("SECRET_KEY")
+app.secret_key = "202020"#os.getenv("SECRET_KEY")
 
 # Ensure templates are auto-reloaded
 app.config["TEMPLATES_AUTO_RELOAD"] = True
+
+app.config['DATABASE_URL'] = "/usr/local/var/postgres/budget"
+
 
 # Ensure responses aren't cached
 @app.after_request
@@ -227,6 +232,23 @@ def index():
 
         # Redirect to results page and render a summary of the submitted expenses
         return render_template("expensed.html", results=expenses)
+
+
+@app.route("/upload", methods=["GET", "POST"])
+@login_required
+def statement():
+    """Upload statement"""
+    if request.method == 'POST':
+            df = pd.read_csv(request.files.get('file'))
+
+            # Add expenses to the DB for user
+            expenses = tendie_expenses.addExpenses(df, session["user_id"])
+
+            # Redirect to results page and render a summary of the submitted expenses
+            return render_template("expensed.html", results=expenses)
+
+            return render_template('upload.html', shape=df.shape)
+    return render_template('upload.html')
 
 
 @app.route("/expenses", methods=["GET"])
