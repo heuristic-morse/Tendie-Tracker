@@ -246,8 +246,6 @@ def statement():
 
             # Redirect to results page and render a summary of the submitted expenses
             return render_template("expensed.html", results=expenses)
-
-            return render_template('upload.html', shape=df.shape)
     return render_template('upload.html')
 
 
